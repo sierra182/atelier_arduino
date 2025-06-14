@@ -1,9 +1,22 @@
 #include <WiFi.h>
+#include <ArduinoJson.h>
 #include "interface.h"
 
 // WiFiServer server(1234);  // Port TCP
 // const char* ssid = "ESP32_Server";
 // const char* password = "12345678";
+
+StaticJsonDocument<200> doc;
+
+void parseJson(StaticJsonDocument<200> &doc, const char * json) {
+ 
+  DeserializationError error = deserializeJson(doc, json);
+  if (error) {
+    Serial.print("Erreur de parsing: ");
+    Serial.println(error.c_str());
+    return;
+  }
+}
 
 void setup() {
 
@@ -18,6 +31,7 @@ void setup() {
   // server.begin();
   // Serial.println("Serveur TCP en écoute.");
  
+  // StaticJsonDocument<200> doc;
 }
 
 void loop() {
