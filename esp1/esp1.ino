@@ -1,6 +1,10 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include "interface.h"
+#include <WiFiUdp.h>
+
+WiFiUDP udp;
+const unsigned int udpPort = 1235;  // un port UDP pour le broadcast
 
 WiFiServer server(1234);  // Port TCP
 const char* ssid = "ESP32_Server";
@@ -44,34 +48,40 @@ void setup() {
   server.begin();
   Serial.println("TCP Server listening.");
 
+  udp.begin(udpPort);
+  Serial.println("UDP started");
 }
 
 void loop() {
   interface_loop(values, diffValues);
-  WiFiClient client = server.available();
-  if (client) {
-    Serial.println("📡 Client connected");
+  // WiFiClient client = server.available();
+  static WiFiClient client;
 
-    while (client.connected()) {
-      if (client.available()) {
-
-        String msg = client.readStringUntil('\n');
-        // Serial.print("📨 Received : ");
-        // Serial.println(msg);
-        parseJson(doc, msg);
-        // ✅ Envoi de l'accusé de réception
-        client.println("ACK: message received !");
-        Serial.println("✅ Response sent.");
-      }
+  if (!client || !client.connected()) {
+    client = server.available();
+    if (client) {
+      Serial.println("📡 Client connected");
     }
-    client.stop();
-    Serial.println("❌ Client disconnected");
-
-    String broadCastMsg = "{pot=" + String(diffValues[0], 2) +
-                          ",ther=" + String(diffValues[1], 2) +
-                          ",ldr=" + String(diffValues[2], 2) + "}";
-
-    Serial.println(broadCastMsg);
   }
-  delay(100);
+
+  if (client && client.connected() && client.available()) {
+    String msg = client.readStringUntil('\n');
+    parseJson(doc, msg);
+    client.println("ACK: message received !");
+    Serial.println("✅ Response sent.");
+  }
+  String broadCastMsg = "{\"pot\":" + String(diffValues[0], 2) +
+                      ",\"ther\":" + String(diffValues[1], 2) +
+                      ",\"ldr\":" + String(diffValues[2], 2) + "}";
+
+  // Serial.println(broadCastMsg);
+  udp.beginPacket("192.168.4.255", udpPort);  // adresse de broadcast sur le réseau AP
+  udp.write((const uint8_t*)broadCastMsg.c_str(), broadCastMsg.length());
+  udp.endPacket();
+  delay(500);
+
+  if (client && !client.connected()) {
+  Serial.println("❌ Client disconnected");
+  client.stop();
+}
 }
