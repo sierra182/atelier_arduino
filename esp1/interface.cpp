@@ -16,7 +16,7 @@ Adafruit_SSD1306 display1(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_SSD1306 display2(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Menu
-const char* menuItems[] = {"Option 1", "Option 2", "Option 3", "Option 4"};
+const char* menuItems[] = {"Potentiometer", "Thermistor", "Photoresistor"};
 const int menuLength = sizeof(menuItems) / sizeof(menuItems[0]);
 int selectedIndex = 0;
 
@@ -27,15 +27,17 @@ bool lastAnnuler = HIGH;
 
 unsigned long lastBlinkTime = 0;
 bool blinkState = false;
-const unsigned long blinkInterval = 500;
+const unsigned long blinkInterval = 200;
 
-String generateBar(int value, int max = 10) {
+int thresholdValues[4] = {5, 5, 5};
+
+String generateBar(int thresholdValue, int max = 10) {
   String bar = "";
   for (int i = 0; i < max; i++) {
-    if (i < value) {
+    if (i < thresholdValue) {
       bar += (char)219; // caractère plein : █
     } else {
-      bar += (char)32; // caractère vide : ░ ou espace
+      bar += (char)32; // caractère vide : espace
     }
   }
   return bar;
@@ -48,20 +50,28 @@ void selectMuxChannel(uint8_t channel) {
   Wire.endTransmission();
 }
 
-void afficherDetail(const char* texte, int value, bool showBar = true) {
+void afficherDetail(const char* texte, int thresholdValue, float value, bool showBar = true) {
   selectMuxChannel(2); // écran droit
   display2.clearDisplay();
   display2.setTextSize(1);
   display2.setTextColor(SSD1306_WHITE);
   display2.setCursor(0, 0);
-  display2.println("Choisi :");
-  display2.setTextSize(2);
+  display2.setTextSize(1);
   display2.println(texte);
+  display2.println("");
+  display2.print("value: ");
+  display2.println(value);
+  display2.setTextSize(2);
   if (showBar) {
-    display2.println(generateBar(value));
+    display2.println(generateBar(thresholdValue));
   } else {
     display2.println("          "); // espace vide (même largeur que la barre)
-  }  display2.display();
+  }
+  display2.setTextSize(1);
+  display2.println("");
+  display2.print("Cap:   ");
+  display2.println(4095 - analogRead(35));
+  display2.display();
 }
 
 void afficherMenu() {
@@ -78,12 +88,11 @@ void afficherMenu() {
       display1.print("  ");
     }
     display1.println(menuItems[i]);
+    display1.println("");
   }
 
   display1.display();
 }
-
-int values[4] = {5, 5, 5, 5};
 
 void interface_setup() {
   //Serial.println("in interface");
@@ -114,7 +123,7 @@ void interface_setup() {
 bool stateOptionDisplayed = false;
 bool editMode = false;
 
-void interface_loop() {
+void interface_loop(float values[]) {
   // Serial.println("in loop");
   bool stateHaut = digitalRead(BOUTON_HAUT);
   bool stateBas = digitalRead(BOUTON_BAS);
@@ -122,9 +131,9 @@ void interface_loop() {
   bool stateAnnuler = digitalRead(BOUTON_ANNULER);
 
   int potVal = analogRead(35);
-  // Serial.print(potVal / (4096 / 10));
-  // Serial.print(stateOptionDisplayed);
-  // Serial.print(" ");
+
+  if (!editMode)
+    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
     selectMuxChannel(2);
@@ -135,7 +144,7 @@ void interface_loop() {
   }
 
   if (lastValider == HIGH && stateValider == LOW && !stateOptionDisplayed) {
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
     stateOptionDisplayed = true;
     editMode = false;
   } else if (lastValider == HIGH && stateValider == LOW && stateOptionDisplayed && !editMode) {
@@ -150,8 +159,8 @@ void interface_loop() {
       blinkState = !blinkState; // inverse le bool à chaque intervalle
     }
     
-    values[selectedIndex] = (4095 - potVal) / (4096 / 10);
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex], blinkState);
+    thresholdValues[selectedIndex] = (4095 - potVal) / (4096 / 10);
+    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex], blinkState);
   }
   
 
@@ -159,14 +168,14 @@ void interface_loop() {
     selectedIndex = (selectedIndex - 1 + menuLength) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
   }
 
   if (lastBas == HIGH && stateBas == LOW) {
     selectedIndex = (selectedIndex + 1) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
   }
 
   lastAnnuler = stateAnnuler;

@@ -8,6 +8,8 @@ const char* password = "12345678";
 
 StaticJsonDocument<200> doc;
 
+float values[3] = {0.0, 0.0, 0.0};
+
 void parseJson(StaticJsonDocument<200> &doc, String& json) {
  
   DeserializationError error = deserializeJson(doc, json.c_str());
@@ -17,13 +19,13 @@ void parseJson(StaticJsonDocument<200> &doc, String& json) {
     return;
   }
   Serial.println("result: ");
-  float value1 = doc["pot"];
-  float value2 = doc["ther"];
-  float value3 = doc["ldr"];
+  values[0] = doc["pot"];
+  values[1] = doc["ther"];
+  values[2] = doc["ldr"];
 
-  Serial.println(value1);
-  Serial.println(value2);
-  Serial.println(value3);
+  Serial.println(values[0]);
+  Serial.println(values[1]);
+  Serial.println(values[2]);
 }
 
 void setup() {
@@ -45,7 +47,7 @@ void setup() {
 
 void loop() {
 
-  interface_loop();
+  interface_loop(values);
   WiFiClient client = server.available();
   if (client) {
     Serial.println("📡 Client connected");
