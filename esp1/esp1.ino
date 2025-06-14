@@ -1,22 +1,30 @@
 #include <WiFi.h>
-// #include <ArduinoJson.h>
+#include <ArduinoJson.h>
 #include "interface.h"
 
 WiFiServer server(1234);  // Port TCP
 const char* ssid = "ESP32_Server";
 const char* password = "12345678";
 
-// StaticJsonDocument<200> doc;
+StaticJsonDocument<200> doc;
 
-// void parseJson(StaticJsonDocument<200> &doc, const char * json) {
+void parseJson(StaticJsonDocument<200> &doc, String& json) {
  
-//   DeserializationError error = deserializeJson(doc, json);
-//   if (error) {
-//     Serial.print("Erreur de parsing: ");
-//     Serial.println(error.c_str());
-//     return;
-//   }
-// }
+  DeserializationError error = deserializeJson(doc, json.c_str());
+  if (error) {
+    Serial.print("Erreur de parsing: ");
+    Serial.println(error.c_str());
+    return;
+  }
+  Serial.println("result: ");
+  float value1 = doc["pot"];
+  float value2 = doc["ther"];
+  float value3 = doc["ldr"];
+
+  Serial.println(value1);
+  Serial.println(value2);
+  Serial.println(value3);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -48,7 +56,7 @@ void loop() {
         String msg = client.readStringUntil('\n');
         Serial.print("📨 Reçu : ");
         Serial.println(msg);
-
+        parseJson(doc, msg);
         // ✅ Envoi de l'accusé de réception
         client.println("ACK: message reçu !");
         Serial.println("✅ Réponse envoyée.");

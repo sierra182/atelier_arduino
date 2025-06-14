@@ -34,9 +34,9 @@ void loop() {
     int valueLdr = analogRead(ldrPin);
 
     // 2. Créer le message
-    String message = "pot=" + String(valuePot) +
-                     ";ther=" + String(valueTher) +
-                     ";ldr=" + String(valueLdr);
+    String message = "{pot:" + String(valuePot) +
+                     ",ther:" + String(valueTher) +
+                     ",ldr:" + String(valueLdr) + "}";
 
     // 3. Envoyer au serveur
     WiFiClient client;
