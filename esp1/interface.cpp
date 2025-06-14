@@ -183,13 +183,6 @@ void interface_loop(float values[], float diffValues[]) {
   diffValues[1] = thresholdValues[1] * 409.5 - values[1];
   diffValues[2] = thresholdValues[2] * 409.5 - values[2];
 
-  Serial.print("Pot Value[0]: ");
-  Serial.println(diffValues[0]);
-  Serial.print("Therm Value[1]: ");
-  Serial.println(diffValues[1]);
-  Serial.print("Photo Value[2]: ");
-  Serial.println(diffValues[2]);
-
   lastAnnuler = stateAnnuler;
   lastValider = stateValider;
   lastHaut = stateHaut;

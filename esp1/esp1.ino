@@ -56,8 +56,8 @@ void loop() {
       if (client.available()) {
 
         String msg = client.readStringUntil('\n');
-        Serial.print("📨 Received : ");
-        Serial.println(msg);
+        // Serial.print("📨 Received : ");
+        // Serial.println(msg);
         parseJson(doc, msg);
         // ✅ Envoi de l'accusé de réception
         client.println("ACK: message received !");
@@ -66,6 +66,12 @@ void loop() {
     }
     client.stop();
     Serial.println("❌ Client disconnected");
+
+    String broadCastMsg = "{pot=" + String(diffValues[0], 2) +
+                          ",ther=" + String(diffValues[1], 2) +
+                          ",ldr=" + String(diffValues[2], 2) + "}";
+
+    Serial.println(broadCastMsg);
   }
   delay(100);
 }
