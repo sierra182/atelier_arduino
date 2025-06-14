@@ -12,7 +12,7 @@ void parseJson(StaticJsonDocument<200> &doc, String& json) {
  
   DeserializationError error = deserializeJson(doc, json.c_str());
   if (error) {
-    Serial.print("Erreur de parsing: ");
+    Serial.print("Parsing error: ");
     Serial.println(error.c_str());
     return;
   }
@@ -39,7 +39,7 @@ void setup() {
   Serial.println(WiFi.softAPIP());
 
   server.begin();
-  Serial.println("Serveur TCP en écoute.");
+  Serial.println("TCP Server listening.");
 
 }
 
@@ -48,22 +48,22 @@ void loop() {
   interface_loop();
   WiFiClient client = server.available();
   if (client) {
-    Serial.println("📡 Client connecté");
+    Serial.println("📡 Client connected");
 
     while (client.connected()) {
       if (client.available()) {
 
         String msg = client.readStringUntil('\n');
-        Serial.print("📨 Reçu : ");
+        Serial.print("📨 Received : ");
         Serial.println(msg);
         parseJson(doc, msg);
         // ✅ Envoi de l'accusé de réception
-        client.println("ACK: message reçu !");
-        Serial.println("✅ Réponse envoyée.");
+        client.println("ACK: message received !");
+        Serial.println("✅ Response sent.");
       }
     }
     client.stop();
-    Serial.println("❌ Client déconnecté");
+    Serial.println("❌ Client disconnected");
   }
   delay(100);
 }
