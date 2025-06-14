@@ -29,7 +29,7 @@ unsigned long lastBlinkTime = 0;
 bool blinkState = false;
 const unsigned long blinkInterval = 200;
 
-int thresholdValues[4] = {5, 5, 5};
+int thresholdValues[] = {5, 5, 5};
 
 String generateBar(int thresholdValue, int max = 10) {
   String bar = "";
@@ -123,7 +123,7 @@ void interface_setup() {
 bool stateOptionDisplayed = false;
 bool editMode = false;
 
-void interface_loop(float values[]) {
+void interface_loop(float values[], float diffValues[]) {
   // Serial.println("in loop");
   bool stateHaut = digitalRead(BOUTON_HAUT);
   bool stateBas = digitalRead(BOUTON_BAS);
@@ -177,6 +177,18 @@ void interface_loop(float values[]) {
     afficherMenu();
     afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
   }
+
+  // update diffValues
+  diffValues[0] = thresholdValues[0] * 409.5 - values[0];
+  diffValues[1] = thresholdValues[1] * 409.5 - values[1];
+  diffValues[2] = thresholdValues[2] * 409.5 - values[2];
+
+  Serial.print("Pot Value[0]: ");
+  Serial.println(diffValues[0]);
+  Serial.print("Therm Value[1]: ");
+  Serial.println(diffValues[1]);
+  Serial.print("Photo Value[2]: ");
+  Serial.println(diffValues[2]);
 
   lastAnnuler = stateAnnuler;
   lastValider = stateValider;

@@ -9,6 +9,7 @@ const char* password = "12345678";
 StaticJsonDocument<200> doc;
 
 float values[3] = {0.0, 0.0, 0.0};
+float diffValues[3] = {0.0, 0.0, 0.0};
 
 void parseJson(StaticJsonDocument<200> &doc, String& json) {
  
@@ -46,8 +47,7 @@ void setup() {
 }
 
 void loop() {
-
-  interface_loop(values);
+  interface_loop(values, diffValues);
   WiFiClient client = server.available();
   if (client) {
     Serial.println("📡 Client connected");
