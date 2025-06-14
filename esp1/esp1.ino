@@ -6,7 +6,10 @@ const char* password = "12345678";
 
 void setup() {
   Serial.begin(115200);
-
+  while (!Serial)
+  {
+    ;
+  }
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
 
@@ -19,6 +22,7 @@ void setup() {
 }
 
 void loop() {
+  //Serial.println("Le Serveur TCP est en écoute.");
   WiFiClient client = server.available();
   if (client) {
     Serial.println("📡 Client connecté");
@@ -37,5 +41,6 @@ void loop() {
 
     client.stop();
     Serial.println("❌ Client déconnecté");
+    delay(100);
   }
 }
