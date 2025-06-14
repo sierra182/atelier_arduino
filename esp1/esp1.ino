@@ -1,44 +1,46 @@
 #include <WiFi.h>
+#include "interface.h"
 
-WiFiServer server(1234);  // Port TCP
-const char* ssid = "ESP32_Server";
-const char* password = "12345678";
+// WiFiServer server(1234);  // Port TCP
+// const char* ssid = "ESP32_Server";
+// const char* password = "12345678";
 
 void setup() {
-  Serial.begin(115200);
+
+  interface_setup();
+  // WiFi.mode(WIFI_AP);
+  // WiFi.softAP(ssid, password);
+
+  // Serial.println("AP créé !");
+  // Serial.print("IP : ");
+  // Serial.println(WiFi.softAPIP());
+
+  // server.begin();
+  // Serial.println("Serveur TCP en écoute.");
  
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid, password);
-
-  Serial.println("AP créé !");
-  Serial.print("IP : ");
-  Serial.println(WiFi.softAPIP());
-
-  server.begin();
-  Serial.println("Serveur TCP en écoute.");
 }
 
 void loop() {
-  //Serial.println("Le Serveur TCP est en écoute.");
-  WiFiClient client = server.available();
-  if (client) {
-    Serial.println("📡 Client connecté");
 
-    while (client.connected()) {
-      if (client.available()) {
-        String msg = client.readStringUntil('\n');
-        Serial.print("📨 Reçu : ");
-        Serial.println(msg);
+  interface_loop();
+  // WiFiClient client = server.available();
+  // if (client) {
+  //   Serial.println("📡 Client connecté");
 
-        // ✅ Envoi de l'accusé de réception
-        client.println("ACK: message reçu !");
-        Serial.println("✅ Réponse envoyée.");
-      }
-    }
+  //   while (client.connected()) {
+  //     if (client.available()) {
 
-    client.stop();
-    Serial.println("❌ Client déconnecté");
-   
-  }
-   delay(100);
+  //       String msg = client.readStringUntil('\n');
+  //       Serial.print("📨 Reçu : ");
+  //       Serial.println(msg);
+
+  //       // ✅ Envoi de l'accusé de réception
+  //       client.println("ACK: message reçu !");
+  //       Serial.println("✅ Réponse envoyée.");
+  //     }
+  //   }
+  //   client.stop();
+  //   Serial.println("❌ Client déconnecté");
+  // }
+  delay(100);
 }
