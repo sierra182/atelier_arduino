@@ -10,8 +10,8 @@ const char* ssid = "ESP32_Server";
 const char* password = "12345678";
 const char* host = "192.168.4.1";
 
-int potPin = 34;
-int therPin = 35;
+int potPin = 35;
+int therPin = 34;
 int ldrPin = 32;
 int valuePot = 0;
 int valueTher = 0;
