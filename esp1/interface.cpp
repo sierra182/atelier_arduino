@@ -41,6 +41,13 @@ String generateBar(int value, int max = 10) {
   return bar;
 }
 
+void selectMuxChannel(uint8_t channel) {
+  if (channel > 7) return;
+  Wire.beginTransmission(MUX_ADDR);
+  Wire.write(1 << channel);
+  Wire.endTransmission();
+}
+
 void afficherDetail(const char* texte, int value, bool showBar = true) {
   selectMuxChannel(2); // écran droit
   display2.clearDisplay();
@@ -55,13 +62,6 @@ void afficherDetail(const char* texte, int value, bool showBar = true) {
   } else {
     display2.println("          "); // espace vide (même largeur que la barre)
   }  display2.display();
-}
-
-void selectMuxChannel(uint8_t channel) {
-  if (channel > 7) return;
-  Wire.beginTransmission(MUX_ADDR);
-  Wire.write(1 << channel);
-  Wire.endTransmission();
 }
 
 void afficherMenu() {
@@ -85,7 +85,9 @@ void afficherMenu() {
 
 int values[4] = {5, 5, 5, 5};
 
-void setup() {
+void interface_setup() {
+  //Serial.println("in interface");
+  //Serial.begin(115200);
   Serial.begin(115200);
   pinMode(BOUTON_HAUT, INPUT_PULLUP);
   pinMode(BOUTON_BAS, INPUT_PULLUP);
@@ -113,7 +115,8 @@ void setup() {
 bool stateOptionDisplayed = false;
 bool editMode = false;
 
-void loop() {
+void interface_loop() {
+  // Serial.println("in loop");
   bool stateHaut = digitalRead(BOUTON_HAUT);
   bool stateBas = digitalRead(BOUTON_BAS);
   bool stateValider = digitalRead(BOUTON_VALIDER);
@@ -121,7 +124,7 @@ void loop() {
 
   int potVal = analogRead(35);
   // Serial.print(potVal / (4096 / 10));
-  // Serial.print(stateOptionDisplayed);
+  Serial.print(stateOptionDisplayed);
   // Serial.print(" ");
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
