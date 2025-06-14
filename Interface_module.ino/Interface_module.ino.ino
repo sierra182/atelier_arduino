@@ -1,17 +1,16 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-  
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 #define MUX_ADDR 0x70
 
-#define BOUTON_HAUT 33
-#define BOUTON_BAS 32
-#define BOUTON_VALIDER 25
-#define BOUTON_ANNULER 26
+#define BOUTON_HAUT 32
+#define BOUTON_BAS 33
+#define BOUTON_VALIDER 26
+#define BOUTON_ANNULER 25
 
 Adafruit_SSD1306 display1(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_SSD1306 display2(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -30,13 +29,6 @@ unsigned long lastBlinkTime = 0;
 bool blinkState = false;
 const unsigned long blinkInterval = 500;
 
-
-const char* ssid = "galaxy";     // Remplace par ton partage Wi-Fi
-const char* password = "wifipass";   // idem
-
-WebServer server(80);
-
-
 String generateBar(int value, int max = 10) {
   String bar = "";
   for (int i = 0; i < max; i++) {
@@ -50,7 +42,7 @@ String generateBar(int value, int max = 10) {
 }
 
 void afficherDetail(const char* texte, int value, bool showBar = true) {
-  selectMuxChannel(1); // écran droit
+  selectMuxChannel(2); // écran droit
   display2.clearDisplay();
   display2.setTextSize(1);
   display2.setTextColor(SSD1306_WHITE);
@@ -73,7 +65,7 @@ void selectMuxChannel(uint8_t channel) {
 }
 
 void afficherMenu() {
-  selectMuxChannel(0); // écran gauche
+  selectMuxChannel(5); // écran gauche
   display1.clearDisplay();
   display1.setTextSize(1);
   display1.setTextColor(SSD1306_WHITE);
@@ -95,34 +87,6 @@ int values[4] = {5, 5, 5, 5};
 
 void setup() {
   Serial.begin(115200);
-
-WiFi.begin(ssid, password);
-  Serial.print("Connexion à ");
-  Serial.println(ssid);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connecté !");
-  Serial.print("IP : ");
-  Serial.println(WiFi.localIP());
-
-  // page de test
-  server.on("/", []() {
-    server.send(200, "text/html", "<h1>ESP32 en ligne !</h1>");
-  });
-
-  server.begin();
-  Serial.println("Serveur HTTP lancé !");
-
-
-
-
-
-
   pinMode(BOUTON_HAUT, INPUT_PULLUP);
   pinMode(BOUTON_BAS, INPUT_PULLUP);
   pinMode(BOUTON_VALIDER, INPUT_PULLUP);
@@ -133,13 +97,13 @@ WiFi.begin(ssid, password);
   Wire.begin(23, 22);
 
   // Écran gauche
-  selectMuxChannel(0);
+  selectMuxChannel(5);
   display1.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display1.clearDisplay();
   display1.display();
 
   // Écran droit (inutile ici pour l’instant)
-  selectMuxChannel(1);
+  selectMuxChannel(2);
   display2.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display2.clearDisplay();
   display2.display();
@@ -157,11 +121,11 @@ void loop() {
 
   int potVal = analogRead(35);
   // Serial.print(potVal / (4096 / 10));
-  Serial.print(stateOptionDisplayed);
+  // Serial.print(stateOptionDisplayed);
   // Serial.print(" ");
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
-    selectMuxChannel(1);
+    selectMuxChannel(2);
     display2.clearDisplay();
     display2.display();
     stateOptionDisplayed = false;
@@ -184,7 +148,7 @@ void loop() {
       blinkState = !blinkState; // inverse le bool à chaque intervalle
     }
     
-    values[selectedIndex] = potVal / (4096 / 10);
+    values[selectedIndex] = (4095 - potVal) / (4096 / 10);
     afficherDetail(menuItems[selectedIndex], values[selectedIndex], blinkState);
   }
   
@@ -209,6 +173,4 @@ void loop() {
   lastBas = stateBas;
 
   delay(200);
-  server.handleClient();
-
 }
