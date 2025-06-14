@@ -1,29 +1,36 @@
 #include <WiFi.h>
 
+// *******************************************************************
+// This module reads values from three captors,
+// formats them as a JSON string,
+// and send them on the Network "ESP32_Server"
+// *******************************************************************
+
 const char* ssid = "ESP32_Server";
 const char* password = "12345678";
-const char* host = "192.168.4.1";  // IP du SoftAP
+const char* host = "192.168.4.1";
 
-int potPin = 34; // GPIO où est branché le signal du potentiomètre
-int therPin = 35; // GPIO où est branché le signal du potentiomètre
-int ldrPin = 32; // GPIO où est branché le signal du potentiomètre
+int potPin = 34;
+int therPin = 35;
+int ldrPin = 32;
 int valuePot = 0;
 int valueTher = 0;
 int valueLdr = 0;
 
 
 void setup() {
-    Serial.begin(115200);
-
     WiFi.begin(ssid, password);
-    Serial.print("Connexion");
+
+    Serial.begin(115200);
+    delay (3000);
+    Serial.print("Connection");
 
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
 
-    Serial.println("\n✅ Connecté !");
+    Serial.println("\n✅ Connected !");
     delay(1000);
 }
 
@@ -40,23 +47,20 @@ void loop() {
 
     // 3. Envoyer au serveur
     WiFiClient client;
-    if (client.connect(host, 1234)) {
-        Serial.println("📡 Connexion au serveur réussie !");
+    if (client.connect(host, 1234))
+    {
+        Serial.println("📡 Connexion to the server successful !");
         client.println(message);
-        Serial.println("📤 Envoyé : " + message);
+        Serial.println("📤 sent : " + message);
 
         // 4. Lire la réponse du serveur
         String response = client.readStringUntil('\n');
-        Serial.println("📬 Réponse : " + response);
-
+        Serial.println("📬 Response : " + response);
         client.stop();
-    } else {
-        Serial.println("❌ Connexion échouée");
     }
-
+    else
+    {
+        Serial.println("❌ Connexion failed");
+    }
     delay(1000);
 }
-
-
-
-
