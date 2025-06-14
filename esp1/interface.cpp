@@ -88,7 +88,6 @@ int values[4] = {5, 5, 5, 5};
 void interface_setup() {
   //Serial.println("in interface");
   //Serial.begin(115200);
-  Serial.begin(115200);
   pinMode(BOUTON_HAUT, INPUT_PULLUP);
   pinMode(BOUTON_BAS, INPUT_PULLUP);
   pinMode(BOUTON_VALIDER, INPUT_PULLUP);
@@ -124,7 +123,7 @@ void interface_loop() {
 
   int potVal = analogRead(35);
   // Serial.print(potVal / (4096 / 10));
-  Serial.print(stateOptionDisplayed);
+  // Serial.print(stateOptionDisplayed);
   // Serial.print(" ");
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
