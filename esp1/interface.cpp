@@ -105,8 +105,6 @@ void afficherMenu() {
 }
 
 void interface_setup() {
-  //Serial.println("in interface");
-  //Serial.begin(115200);
   pinMode(BOUTON_HAUT, INPUT_PULLUP);
   pinMode(BOUTON_BAS, INPUT_PULLUP);
   pinMode(BOUTON_VALIDER, INPUT_PULLUP);
@@ -136,7 +134,6 @@ bool editMode = false;
 
 
 void interface_loop(float values[], float diffValues[]) {
-  // Serial.println("in loop");
   bool stateHaut = digitalRead(BOUTON_HAUT);
   bool stateBas = digitalRead(BOUTON_BAS);
   bool stateValider = digitalRead(BOUTON_VALIDER);
@@ -198,6 +195,4 @@ void interface_loop(float values[], float diffValues[]) {
   lastValider = stateValider;
   lastHaut = stateHaut;
   lastBas = stateBas;
-
-  delay(200);
 }
