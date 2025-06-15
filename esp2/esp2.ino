@@ -17,50 +17,62 @@ int valuePot = 0;
 int valueTher = 0;
 int valueLdr = 0;
 
+unsigned long previousMillis = 0;
+const long interval = 200; // en ms (5 fois par seconde)
 
 void setup() {
-    WiFi.begin(ssid, password);
 
     Serial.begin(115200);
-    delay (3000);
-    Serial.print("Connection");
+    Serial.println("Connection");
 
+    WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
 
     Serial.println("\n✅ Connected !");
-    delay(1000);
 }
 
 void loop() {
-    // 1. Lire les capteurs
-    int valuePot = analogRead(potPin);
-    int valueTher = analogRead(therPin);
-    int valueLdr = analogRead(ldrPin);
+    unsigned long currentMillis = millis();
 
-    // 2. Créer le message
-    String message = "{pot:" + String(valuePot) +
-                     ",ther:" + String(valueTher) +
-                     ",ldr:" + String(valueLdr) + "}";
+    if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+        
+        // 0. check connection - reconnect if need be
+        if (WiFi.status() != WL_CONNECTED) {
+            WiFi.begin(ssid, password);
+            delay(500);
+            return;
+        }
+        
+        // 1. Lire les capteurs
+        valuePot = analogRead(potPin);
+        valueTher = analogRead(therPin);
+        valueLdr = analogRead(ldrPin);
 
-    // 3. Envoyer au serveur
-    WiFiClient client;
-    if (client.connect(host, 1234))
-    {
-        Serial.println("📡 Connexion to the server successful !");
-        client.println(message);
-        Serial.println("📤 sent : " + message);
+        // 2. Créer le message
+        String message = "{pot:" + String(valuePot) +
+                        ",ther:" + String(valueTher) +
+                        ",ldr:" + String(valueLdr) + "}";
 
-        // 4. Lire la réponse du serveur
-        String response = client.readStringUntil('\n');
-        Serial.println("📬 Response : " + response);
-        client.stop();
+        // 3. Envoyer au serveur
+        WiFiClient client;
+        if (client.connect(host, 1234))
+        {
+            Serial.println("📡 Connected to the server !");
+            client.println(message);
+            Serial.println("📤 sent : " + message);
+
+            // 4. Lire la réponse du serveur
+            String response = client.readStringUntil('\n');
+            Serial.println("📬 Response : " + response);
+            client.stop();
+        }
+        else
+        {
+            Serial.println("❌ Connexion failed");
+        }
     }
-    else
-    {
-        Serial.println("❌ Connexion failed");
-    }
-    delay(1000);
 }
