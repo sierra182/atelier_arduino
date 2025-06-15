@@ -20,18 +20,15 @@ int valueLdr = 0;
 unsigned long previousMillis = 0;
 const long interval = 200; // en ms (5 fois par seconde)
 
+unsigned long lastAttemptTime = 0;
+const long retryInterval = 5000; // 5 secondes
+bool wifiConnected = false;
+
 void setup() {
 
-    Serial.begin(115200);
-    Serial.println("Connection");
-
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-
-    Serial.println("\n✅ Connected !");
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  lastAttemptTime = millis();
 }
 
 void loop() {
@@ -40,11 +37,22 @@ void loop() {
     if (currentMillis - previousMillis >= interval) {
         previousMillis = currentMillis;
         
-        // 0. check connection - reconnect if need be
-        if (WiFi.status() != WL_CONNECTED) {
+        if (!wifiConnected && millis() - lastAttemptTime >= retryInterval) {
+            Serial.println("🔁 Tentative de connexion...");
             WiFi.begin(ssid, password);
-            delay(500);
-            return;
+            lastAttemptTime = millis();
+        }
+
+        if (WiFi.status() == WL_CONNECTED && !wifiConnected) {
+            wifiConnected = true;
+            Serial.println("✅ Connecté !");
+            // Ici tu peux lancer le reste de ton programme (TCP client, etc.)
+        }
+
+        // Optionnel : détecter une déconnexion
+        if (wifiConnected && WiFi.status() != WL_CONNECTED) {
+            Serial.println("⚠️ Perte de connexion !");
+            wifiConnected = false;
         }
         
         // 1. Lire les capteurs
@@ -53,9 +61,9 @@ void loop() {
         valueLdr = analogRead(ldrPin);
 
         // 2. Créer le message
-        String message = "{pot:" + String(valuePot) +
-                        ",ther:" + String(valueTher) +
-                        ",ldr:" + String(valueLdr) + "}";
+        String message = "{\"pot\":" + String(valuePot) +
+                        ",\"ther\":" + String(valueTher) +
+                        ",\"ldr\":" + String(valueLdr) + "}";
 
         // 3. Envoyer au serveur
         WiFiClient client;
