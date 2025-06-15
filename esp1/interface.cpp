@@ -29,7 +29,6 @@ unsigned long lastBlinkTime = 0;
 bool blinkState = false;
 const unsigned long blinkInterval = 200;
 
-int graphThresholdValues[] = {5, 5, 5};
 float thresholdValues[] = {2048.00, 2048.00, 2048.00};
 
 String generateBar(int thresholdValue, int max = 10) {
@@ -51,7 +50,12 @@ void selectMuxChannel(uint8_t channel) {
   Wire.endTransmission();
 }
 
-void afficherDetail(const char* texte, int selectedIndex, int thresholdValue, float value, bool showBar = true) {
+int getGraphThresholdValue(int selectedIndex)
+{
+  return (int)thresholdValues[selectedIndex] / 409.6;
+}
+
+void afficherDetail(const char* texte, int selectedIndex, float value, bool showBar = true) {
   selectMuxChannel(2); // écran droit
   display2.clearDisplay();
   display2.setTextSize(1);
@@ -64,7 +68,7 @@ void afficherDetail(const char* texte, int selectedIndex, int thresholdValue, fl
   display2.println(value);
   display2.setTextSize(2);
   if (showBar) {
-    display2.println(generateBar(thresholdValue));
+    display2.println(generateBar(getGraphThresholdValue(selectedIndex)));
   } else {
     display2.println("          "); // espace vide (même largeur que la barre)
   }
@@ -74,6 +78,8 @@ void afficherDetail(const char* texte, int selectedIndex, int thresholdValue, fl
   display2.println(thresholdValues[selectedIndex]);
   display2.display();
 }
+
+
 
 void afficherMenu() {
   selectMuxChannel(5); // écran gauche
@@ -124,17 +130,18 @@ void interface_setup() {
 bool stateOptionDisplayed = false;
 bool editMode = false;
 
+
+
 void interface_loop(float values[], float diffValues[]) {
   // Serial.println("in loop");
   bool stateHaut = digitalRead(BOUTON_HAUT);
   bool stateBas = digitalRead(BOUTON_BAS);
   bool stateValider = digitalRead(BOUTON_VALIDER);
   bool stateAnnuler = digitalRead(BOUTON_ANNULER);
-
-  int potVal = analogRead(35);
+  int potVal = 0;
 
   if (!editMode)
-    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
     selectMuxChannel(2);
@@ -145,7 +152,7 @@ void interface_loop(float values[], float diffValues[]) {
   }
 
   if (lastValider == HIGH && stateValider == LOW && !stateOptionDisplayed) {
-    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
     stateOptionDisplayed = true;
     editMode = false;
   } else if (lastValider == HIGH && stateValider == LOW && stateOptionDisplayed && !editMode) {
@@ -159,10 +166,9 @@ void interface_loop(float values[], float diffValues[]) {
       lastBlinkTime = currentMillis;
       blinkState = !blinkState; // inverse le bool à chaque intervalle
     }
-    
-    graphThresholdValues[selectedIndex] = (4095 - potVal) / 409.6;
+    potVal = analogRead(35);
     thresholdValues[selectedIndex] = 4095 - potVal;
-    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex], blinkState);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex], blinkState);
   }
   
 
@@ -170,20 +176,20 @@ void interface_loop(float values[], float diffValues[]) {
     selectedIndex = (selectedIndex - 1 + menuLength) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
   }
 
   if (lastBas == HIGH && stateBas == LOW) {
     selectedIndex = (selectedIndex + 1) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
   }
 
   // update diffValues
-  diffValues[0] = graphThresholdValues[0] * 409.5 - values[0];
-  diffValues[1] = graphThresholdValues[1] * 409.5 - values[1];
-  diffValues[2] = graphThresholdValues[2] * 409.5 - values[2];
+  diffValues[0] = thresholdValues[0] * 409.5 - values[0];
+  diffValues[1] = thresholdValues[1] * 409.5 - values[1];
+  diffValues[2] = thresholdValues[2] * 409.5 - values[2];
 
   lastAnnuler = stateAnnuler;
   lastValider = stateValider;
