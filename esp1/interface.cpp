@@ -31,6 +31,8 @@ const unsigned long blinkInterval = 200;
 
 float thresholdValues[] = {2048.00, 2048.00, 2048.00};
 
+uint8_t lastMuxChannel = 255; // Valeur impossible → forcera la première sélection
+
 String generateBar(int thresholdValue, int max = 10) {
   String bar = "";
   for (int i = 0; i < max; i++) {
@@ -44,10 +46,11 @@ String generateBar(int thresholdValue, int max = 10) {
 }
 
 void selectMuxChannel(uint8_t channel) {
-  if (channel > 7) return;
+  if (channel > 7 || channel == lastMuxChannel) return; // Évite les appels inutiles
   Wire.beginTransmission(MUX_ADDR);
   Wire.write(1 << channel);
   Wire.endTransmission();
+  lastMuxChannel = channel; // Mise à jour
 }
 
 int getGraphThresholdValue(int selectedIndex)
@@ -187,9 +190,9 @@ void interface_loop(float values[], float diffValues[]) {
   }
 
   // update diffValues
-  diffValues[0] = thresholdValues[0] * 409.5 - values[0];
-  diffValues[1] = thresholdValues[1] * 409.5 - values[1];
-  diffValues[2] = thresholdValues[2] * 409.5 - values[2];
+  diffValues[0] = thresholdValues[0] - values[0];
+  diffValues[1] = thresholdValues[1] - values[1];
+  diffValues[2] = thresholdValues[2] - values[2];
 
   lastAnnuler = stateAnnuler;
   lastValider = stateValider;
