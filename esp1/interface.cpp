@@ -29,7 +29,8 @@ unsigned long lastBlinkTime = 0;
 bool blinkState = false;
 const unsigned long blinkInterval = 200;
 
-int thresholdValues[] = {5, 5, 5};
+int graphThresholdValues[] = {5, 5, 5};
+float thresholdValues[] = {2048.00, 2048.00, 2048.00};
 
 String generateBar(int thresholdValue, int max = 10) {
   String bar = "";
@@ -50,7 +51,7 @@ void selectMuxChannel(uint8_t channel) {
   Wire.endTransmission();
 }
 
-void afficherDetail(const char* texte, int thresholdValue, float value, bool showBar = true) {
+void afficherDetail(const char* texte, int selectedIndex, int thresholdValue, float value, bool showBar = true) {
   selectMuxChannel(2); // écran droit
   display2.clearDisplay();
   display2.setTextSize(1);
@@ -70,7 +71,7 @@ void afficherDetail(const char* texte, int thresholdValue, float value, bool sho
   display2.setTextSize(1);
   display2.println("");
   display2.print("Cap:   ");
-  display2.println(4095 - analogRead(35));
+  display2.println(thresholdValues[selectedIndex]);
   display2.display();
 }
 
@@ -133,7 +134,7 @@ void interface_loop(float values[], float diffValues[]) {
   int potVal = analogRead(35);
 
   if (!editMode)
-    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
     selectMuxChannel(2);
@@ -144,7 +145,7 @@ void interface_loop(float values[], float diffValues[]) {
   }
 
   if (lastValider == HIGH && stateValider == LOW && !stateOptionDisplayed) {
-    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
     stateOptionDisplayed = true;
     editMode = false;
   } else if (lastValider == HIGH && stateValider == LOW && stateOptionDisplayed && !editMode) {
@@ -159,8 +160,9 @@ void interface_loop(float values[], float diffValues[]) {
       blinkState = !blinkState; // inverse le bool à chaque intervalle
     }
     
-    thresholdValues[selectedIndex] = (4095 - potVal) / (4096 / 10);
-    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex], blinkState);
+    graphThresholdValues[selectedIndex] = (4095 - potVal) / 409.6;
+    thresholdValues[selectedIndex] = 4095 - potVal;
+    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex], blinkState);
   }
   
 
@@ -168,20 +170,20 @@ void interface_loop(float values[], float diffValues[]) {
     selectedIndex = (selectedIndex - 1 + menuLength) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
   }
 
   if (lastBas == HIGH && stateBas == LOW) {
     selectedIndex = (selectedIndex + 1) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], thresholdValues[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, graphThresholdValues[selectedIndex], values[selectedIndex]);
   }
 
   // update diffValues
-  diffValues[0] = thresholdValues[0] * 409.5 - values[0];
-  diffValues[1] = thresholdValues[1] * 409.5 - values[1];
-  diffValues[2] = thresholdValues[2] * 409.5 - values[2];
+  diffValues[0] = graphThresholdValues[0] * 409.5 - values[0];
+  diffValues[1] = graphThresholdValues[1] * 409.5 - values[1];
+  diffValues[2] = graphThresholdValues[2] * 409.5 - values[2];
 
   lastAnnuler = stateAnnuler;
   lastValider = stateValider;

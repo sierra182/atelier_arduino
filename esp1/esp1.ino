@@ -15,6 +15,9 @@ StaticJsonDocument<200> doc;
 float values[3] = {0.0, 0.0, 0.0};
 float diffValues[3] = {0.0, 0.0, 0.0};
 
+static unsigned long previousMillis = 0;
+const long interval = 500;
+
 void parseJson(StaticJsonDocument<200> &doc, String& json) {
  
   DeserializationError error = deserializeJson(doc, json.c_str());
@@ -74,14 +77,17 @@ void loop() {
                       ",\"ther\":" + String(diffValues[1], 2) +
                       ",\"ldr\":" + String(diffValues[2], 2) + "}";
 
-  // Serial.println(broadCastMsg);
-  udp.beginPacket("192.168.4.255", udpPort);  // adresse de broadcast sur le réseau AP
-  udp.write((const uint8_t*)broadCastMsg.c_str(), broadCastMsg.length());
-  udp.endPacket();
-  delay(500);
-
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    // Serial.println(broadCastMsg);
+    udp.beginPacket("192.168.4.255", udpPort);  // adresse de broadcast sur le réseau AP
+    udp.write((const uint8_t*)broadCastMsg.c_str(), broadCastMsg.length());
+    udp.endPacket();
+  }
+  
   if (client && !client.connected()) {
-  Serial.println("❌ Client disconnected");
-  client.stop();
-}
+    Serial.println("❌ Client disconnected");
+    client.stop();
+  }
 }
