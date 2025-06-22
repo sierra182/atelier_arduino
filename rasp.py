@@ -13,8 +13,8 @@ try:
     while True:
         if ser.in_waiting > 0:  # Vérifie s’il y a des données à lire
             line = ser.readline().decode('utf-8').strip()
-            print(fArduino dit : {line})
+            print(f"Arduino dit : {line}")
 except KeyboardInterrupt:
-    print(Fin de lecture.)
+    print("Fin de lecture.")
     ser.close()
 
