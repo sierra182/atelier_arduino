@@ -30,8 +30,6 @@ void setup() {
 
   // server.begin();
   // Serial.println("Serveur TCP en écoute.");
- 
-  // StaticJsonDocument<200> doc;
 }
 
 void loop() {
