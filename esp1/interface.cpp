@@ -16,7 +16,7 @@ Adafruit_SSD1306 display1(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Adafruit_SSD1306 display2(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Menu
-const char* menuItems[] = {"Option 1", "Option 2", "Option 3", "Option 4"};
+const char* menuItems[] = {"Potentiometer", "Thermistor", "Photoresistor"};
 const int menuLength = sizeof(menuItems) / sizeof(menuItems[0]);
 int selectedIndex = 0;
 
@@ -27,42 +27,62 @@ bool lastAnnuler = HIGH;
 
 unsigned long lastBlinkTime = 0;
 bool blinkState = false;
-const unsigned long blinkInterval = 500;
+const unsigned long blinkInterval = 200;
 
-String generateBar(int value, int max = 10) {
+float thresholdValues[] = {2048.00, 2048.00, 2048.00};
+
+uint8_t lastMuxChannel = 255; // Valeur impossible → forcera la première sélection
+
+String generateBar(int thresholdValue, int max = 10) {
   String bar = "";
   for (int i = 0; i < max; i++) {
-    if (i < value) {
+    if (i < thresholdValue) {
       bar += (char)219; // caractère plein : █
     } else {
-      bar += (char)32; // caractère vide : ░ ou espace
+      bar += (char)32; // caractère vide : espace
     }
   }
   return bar;
 }
 
 void selectMuxChannel(uint8_t channel) {
-  if (channel > 7) return;
+  if (channel > 7 || channel == lastMuxChannel) return; // Évite les appels inutiles
   Wire.beginTransmission(MUX_ADDR);
   Wire.write(1 << channel);
   Wire.endTransmission();
+  lastMuxChannel = channel; // Mise à jour
 }
 
-void afficherDetail(const char* texte, int value, bool showBar = true) {
+int getGraphThresholdValue(int selectedIndex)
+{
+  return (int)thresholdValues[selectedIndex] / 409.6;
+}
+
+void afficherDetail(const char* texte, int selectedIndex, float value, bool showBar = true) {
   selectMuxChannel(2); // écran droit
   display2.clearDisplay();
   display2.setTextSize(1);
   display2.setTextColor(SSD1306_WHITE);
   display2.setCursor(0, 0);
-  display2.println("Choisi :");
-  display2.setTextSize(2);
+  display2.setTextSize(1);
   display2.println(texte);
+  display2.println("");
+  display2.print("value: ");
+  display2.println(value);
+  display2.setTextSize(2);
   if (showBar) {
-    display2.println(generateBar(value));
+    display2.println(generateBar(getGraphThresholdValue(selectedIndex)));
   } else {
     display2.println("          "); // espace vide (même largeur que la barre)
-  }  display2.display();
+  }
+  display2.setTextSize(1);
+  display2.println("");
+  display2.print("Cap:   ");
+  display2.println(thresholdValues[selectedIndex]);
+  display2.display();
 }
+
+
 
 void afficherMenu() {
   selectMuxChannel(5); // écran gauche
@@ -78,17 +98,13 @@ void afficherMenu() {
       display1.print("  ");
     }
     display1.println(menuItems[i]);
+    display1.println("");
   }
 
   display1.display();
 }
 
-int values[4] = {5, 5, 5, 5};
-
 void interface_setup() {
-  //Serial.println("in interface");
-  //Serial.begin(115200);
-  Serial.begin(115200);
   pinMode(BOUTON_HAUT, INPUT_PULLUP);
   pinMode(BOUTON_BAS, INPUT_PULLUP);
   pinMode(BOUTON_VALIDER, INPUT_PULLUP);
@@ -115,17 +131,17 @@ void interface_setup() {
 bool stateOptionDisplayed = false;
 bool editMode = false;
 
-void interface_loop() {
-  // Serial.println("in loop");
+
+
+void interface_loop(float values[], float diffValues[]) {
   bool stateHaut = digitalRead(BOUTON_HAUT);
   bool stateBas = digitalRead(BOUTON_BAS);
   bool stateValider = digitalRead(BOUTON_VALIDER);
   bool stateAnnuler = digitalRead(BOUTON_ANNULER);
+  int potVal = 0;
 
-  int potVal = analogRead(35);
-  // Serial.print(potVal / (4096 / 10));
-  Serial.print(stateOptionDisplayed);
-  // Serial.print(" ");
+  if (!editMode)
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
     selectMuxChannel(2);
@@ -136,7 +152,7 @@ void interface_loop() {
   }
 
   if (lastValider == HIGH && stateValider == LOW && !stateOptionDisplayed) {
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
     stateOptionDisplayed = true;
     editMode = false;
   } else if (lastValider == HIGH && stateValider == LOW && stateOptionDisplayed && !editMode) {
@@ -150,9 +166,9 @@ void interface_loop() {
       lastBlinkTime = currentMillis;
       blinkState = !blinkState; // inverse le bool à chaque intervalle
     }
-    
-    values[selectedIndex] = (4095 - potVal) / (4096 / 10);
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex], blinkState);
+    potVal = analogRead(35);
+    thresholdValues[selectedIndex] = 4095 - potVal;
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex], blinkState);
   }
   
 
@@ -160,20 +176,23 @@ void interface_loop() {
     selectedIndex = (selectedIndex - 1 + menuLength) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
   }
 
   if (lastBas == HIGH && stateBas == LOW) {
     selectedIndex = (selectedIndex + 1) % menuLength;
     editMode = false;
     afficherMenu();
-    afficherDetail(menuItems[selectedIndex], values[selectedIndex]);
+    afficherDetail(menuItems[selectedIndex], selectedIndex, values[selectedIndex]);
   }
+
+  // update diffValues
+  diffValues[0] = thresholdValues[0] - values[0];
+  diffValues[1] = thresholdValues[1] - values[1];
+  diffValues[2] = thresholdValues[2] - values[2];
 
   lastAnnuler = stateAnnuler;
   lastValider = stateValider;
   lastHaut = stateHaut;
   lastBas = stateBas;
-
-  delay(200);
 }

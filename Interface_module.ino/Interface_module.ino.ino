@@ -121,7 +121,7 @@ void loop() {
 
   int potVal = analogRead(35);
   // Serial.print(potVal / (4096 / 10));
-  Serial.print(stateOptionDisplayed);
+  // Serial.print(stateOptionDisplayed);
   // Serial.print(" ");
 
   if (lastAnnuler == HIGH && stateAnnuler == LOW) {
