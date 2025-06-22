@@ -12,33 +12,33 @@ def dire_bonjour(name):
 
 def send_value(sensor: str, value: float):
     print(f"je vais envoyer ces infos a l'arduino: {sensor} : {value}")
-    # import serial
-    # import time
+    import serial
+    import time
 
-    # # 🧭 Ouvre la connexion série
-    # ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-    # time.sleep(2)  # ⏳ Attend que la connexion soit prête
+    # 🧭 Ouvre la connexion série
+    ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+    time.sleep(2)  # ⏳ Attend que la connexion soit prête
 
-    # # # ✉️ Envoie un message à l'Arduino
-    # # ser.write(b'sensor-value')
-    # import json
+    # # ✉️ Envoie un message à l'Arduino
+    # ser.write(b'sensor-value')
+    import json
 
-    # data = {
-    #     "sensor": sensor,
-    #     "value": value
-    # }
+    data = {
+        "sensor": sensor,
+        "value": value
+    }
 
-    # # 🔄 Conversion en chaîne JSON
-    # json_str = json.dumps(data) + "\n"  # le \n permet à l'Arduino de savoir quand le message se termine
+    # 🔄 Conversion en chaîne JSON
+    json_str = json.dumps(data) + "\n"  # le \n permet à l'Arduino de savoir quand le message se termine
 
-    # # 📤 Envoi via le port série
-    # ser.write(json_str.encode('utf-8'))
-    #     # 📥 Lit une réponse (si l'Arduino en envoie)
-    # # line = ser.readline().decode('utf-8').strip()
-    # # print(f"Reçu depuis Arduino : {line}")
+    # 📤 Envoi via le port série
+    ser.write(json_str.encode('utf-8'))
+        # 📥 Lit une réponse (si l'Arduino en envoie)
+    # line = ser.readline().decode('utf-8').strip()
+    # print(f"Reçu depuis Arduino : {line}")
 
-    # # 🔚 Ferme la connexion
-    # ser.close()
+    # 🔚 Ferme la connexion
+    ser.close()
 
 # 📦 Déclaration du tool (function)
 function_tool = [
