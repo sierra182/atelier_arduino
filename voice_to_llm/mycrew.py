@@ -19,7 +19,7 @@ class FirstTool(BaseTool):
 
 agent = Agent(
 	role="testeur",
-	goal="executer le tool ou pas selon si luser te dis crapaux ds son prompt tu utilise le tool sinon tu dis juste non!",
+	goal="executer le tool ou pas selon la tache a accomplir",
 	backstory="tu es la pour un test fait ton but",
 	tools=[FirstTool()],
 	llm=ChatOpenAI(model="gpt-4o"),
@@ -27,7 +27,7 @@ agent = Agent(
 )
 
 task = Task(
-	description="j'aime les crapaux",
+	description="executer le tool ou pas selon si luser te dis crapaux ds son prompt tu utilise le tool sinon tu dis juste non!",
 	expected_output="une phrase tres courte ou execute juste le tool",
 	agent=agent
 )
@@ -86,8 +86,8 @@ agent_manager = Agent(
 )
 
 mycrew = Crew(
-	agents=[input_agent],
-	tasks=[voice_task],
+	agents=[input_agent, agent],
+	tasks=[voice_task, task],
 	verbose=True,
 )
 

@@ -6,7 +6,6 @@ anyio==4.9.0
 appdirs==1.4.4
 asttokens==3.0.0
 attrs==25.3.0
-audioop-lts==0.2.1
 auth0-python==4.10.0
 babel==2.17.0
 backoff==2.2.1
@@ -98,7 +97,6 @@ numpy==2.3.1
 oauthlib==3.3.1
 onnxruntime==1.22.0
 openai==1.90.0
-openai-agent==0.1.0
 openai-agents==0.0.19
 openpyxl==3.1.5
 opentelemetry-api==1.34.1

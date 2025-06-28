@@ -12,7 +12,7 @@ def voice_to_text() -> str:
 		print("🔧 Calibrage en cours...")
 		r.adjust_for_ambient_noise(source, duration=1)
 		print("🔊 Parle, je t'écoute...")
-		audio = r.listen(source, phrase_time_limit=5)
+		audio = r.listen(source)
 		wav_buffer = BytesIO(audio.get_wav_data())
 		son = AudioSegment.from_file(wav_buffer, format="wav")
 		print("🔊 Lecture en cours...")
